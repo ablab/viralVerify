@@ -55,9 +55,9 @@ def check_circular(file, name):
        if circular_contigs[contig[0].split(" ")[0][1:]][1] == "-":
           output.write(contig[1]+"\n")
        elif circular_contigs[contig[0].split(" ")[0][1:]][1] == "+":
-          if contig[0].split(" ")[0][1:] in circ_set:
-            output.write(contig[1]+contig[1][:5000]+"\n")
-          else:
+        #  if contig[0].split(" ")[0][1:] in circ_set:
+          #  output.write(contig[1]+contig[1][:5000]+"\n")
+         # else:
             output.write(contig[1]+contig[1][kval:5000]+"\n")
 
    return(circular_contigs)
@@ -109,7 +109,7 @@ def get_table_from_tblout(tblout_pfam):
 
 def naive_bayes(input_list):
     unc_score = 3
-    tr=os.path.dirname(__file__) + "/classifier_table_viral_and_shit_train_1e-06_pseudo001_min10.txt"
+    tr=os.path.dirname(os.path.abspath(__file__)) + "/classifier_table_viral_and_shit_train_1e-06_pseudo001_min10.txt"
 
     with open(tr, 'r') as infile:
         table=infile.readlines()

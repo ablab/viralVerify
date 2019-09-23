@@ -57,7 +57,7 @@ def read_fasta(filename):
     res_seq = []
     first = True
     seq = ''
-    fastafile = file
+    fastafile = filename
     file_ext = os.path.splitext(filename)[1]
     if file_ext == ".gz":
         import gzip
@@ -80,9 +80,9 @@ def read_fasta(filename):
 
 def write_fasta(fasta):
     for name, seq in fasta:
-        print name
+        print (name)
         for i in xrange(0,len(seq),60):
-            print seq[i:i+60]
+            print (seq[i:i+60])
 
 def write_fasta_to_file(filename, fasta):
     outfile = open(filename, 'a')
@@ -103,5 +103,5 @@ def remove_nonACGT(seq):
     seq2 = []
     for c in seq:
         if c  in 'ACGT':
-	    seq2.append(c)
+            seq2.append(c)
     return string.join(seq2, '')	
