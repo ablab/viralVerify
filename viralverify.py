@@ -109,7 +109,7 @@ def get_table_from_tblout(tblout_pfam):
 
 def naive_bayes(input_list):
     unc_score = 3
-    tr=os.path.dirname(os.path.abspath(__file__)) + "/classifier_table_viral_and_shit_train_1e-06_pseudo001_min10.txt"
+    tr=os.path.dirname(os.path.abspath(__file__)) + "/classifier_table.txt"
 
     with open(tr, 'r') as infile:
         table=infile.readlines()
