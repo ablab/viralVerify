@@ -16,15 +16,15 @@ import fastaparser
 def parse_args(args):
 ###### Command Line Argument Parser
     parser = argparse.ArgumentParser(description="HMM-based plasmid verification script")
-    if len(sys.argv)==1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
     parser.add_argument('-f', required = True, help='Input fasta file')
     parser.add_argument('-o', required = True, help='Output directory')
     parser.add_argument('--db', help='Run BLAST on input contigs with provided database')
     parser.add_argument('--hmm', help='Path to Pfam-A HMM database')    
     parser.add_argument('-t', help='Number of threads')   
     parser.add_argument('-p', action='store_true', help='Output predicted plasmids separately')   
+    if len(sys.argv)==1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
 
     return parser.parse_args()
 
