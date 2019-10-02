@@ -14,7 +14,9 @@ viralVerify is a Python script, thus, installation is not required. However, it 
 * Python 2.7+,
 * Prodigal (https://github.com/hyattpd/Prodigal, available via conda),
 * hmmsearch (from the hmmer package, http://hmmer.org/download.html),
-* provided database of virus/chromosome-specific HMMs (nbc_hmms.hmm.gz) or Pfam-A database (you can download recent release here: ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/)
+* [provided database of virus/chromosome-specific HMMs](http://data.cab.spbu.ru/index.php/s/RogrHJtxBRrY7ec/download?path=%2F&files=nbc_hmms.hmm.gz)
+ or 
+* Pfam-A database (you can download recent release here: ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/).
 
 To work properly, viralVerify require Prodigal and hmmsearch in your PATH environment variable.
 

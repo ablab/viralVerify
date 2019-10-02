@@ -307,7 +307,6 @@ def main():
         for i in amb:
             amb_list.append(i)
         amb_list = [i.strip().split()[0] for i in amb_list] 
-        print (nos_list)
 
     
     final_table=collections.OrderedDict()
@@ -325,13 +324,11 @@ def main():
             if i in vir_list:
               final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Virus", vir_list[i][0], vir_list[i][1],vir_list[i][2]]
             if i in nos_list:
-              print(i)
               final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Non-significant"]
             if i in amb_list:
               final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Ambiguous"]
     
        else: 
-            print(i)
             if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):
               names_result[i] = "Uncertain - viral or bacterial"
             else:
