@@ -15,6 +15,7 @@ import fastaparser
 def parse_args(args):
 ###### Command Line Argument Parser
     parser = argparse.ArgumentParser(description="HMM-based plasmid verification script")
+    parser._action_groups.pop()
     required_args = parser.add_argument_group('required arguments')
     required_args.add_argument('-f', required = True, help='Input fasta file')
     required_args.add_argument('-o', required = True, help='Output directory')
