@@ -36,7 +36,6 @@ for i in ["v","nv","p"]:
     base_i = os.path.basename(getattr(args,i))
     input_files[i] = os.path.join(outdir, os.path.splitext(base_i)[0])
 
-print (input_files)
 
 try:
     os.makedirs(outdir)
@@ -83,9 +82,11 @@ from operator import itemgetter
 
 
 pfam={}
-with open("/Nancy/mrayko/db/pfam/pfam_names.list", 'r') as infile:
+with open(hmm, 'r') as infile:
     for line in infile:
-      pfam[line.strip()]=[0,0,0]
+      if line.split()[0] == "NAME":
+        #print line.split()[1]
+        pfam[line.split()[1]]=[0,0,0]
 
 
 
@@ -143,7 +144,13 @@ for key,value in pfam.items():
 
     table.append([key, value[0], value[1], value[2], a, b, c, d])
 
-for i in sorted(table, key=itemgetter(5), reverse = True):
- # if i[1] >= 10 or i[2] >= 10 or i[3] >= 10:
-    i = [str(j) for j in i]
-    print ('\t'.join(i))
+
+with open(outdir+"/classifier_table.txt", 'w') as output:
+      for i in sorted(table, key=itemgetter(5), reverse = True):
+       if i[1] >= 10 or i[2] >= 10 or i[3] >= 10:
+         i = [str(j) for j in i]
+         output.write("%s\n" % '\t'.join(i))
+
+
+print ("Table for classifier can be found in " + os.path.abspath(outdir+"/classifier_table.txt"))
+
