@@ -32,7 +32,7 @@ dirname = os.path.dirname(__file__)
 input_files = {}
 
 for i in ["v","nv","p"]:
-  if (i in args) and getattr(args,i) != False:
+  if (i in args) and getattr(args,i) != None:
     base_i = os.path.basename(getattr(args,i))
     input_files[i] = os.path.join(outdir, os.path.splitext(base_i)[0])
 
@@ -84,15 +84,14 @@ from operator import itemgetter
 pfam={}
 with open(hmm, 'r') as infile:
     for line in infile:
-      if line.split()[0] == "NAME":
-        #print line.split()[1]
+      if line[:4] == "NAME":
         pfam[line.split()[1]]=[0,0,0]
 
 
 
 #filter by e-value 
-if "pl" in input_files:
-  with open(input_files["pl"]+"_domtblout") as f:
+if "p" in input_files:
+  with open(input_files["p"]+"_domtblout") as f:
     tblout_pl = f.read().splitlines()
     tblout_pl = [i.split() for i in tblout_pl]
     pl_count = 0
@@ -136,7 +135,6 @@ with open(input_files["v"]+"_domtblout") as f2:
 pseudo=0.01
 table=[]
 for key,value in pfam.items():
-#  if value[0] >= 10 or value[1] >= 10:
     a = (value[0] + pseudo)/float(pl_count+len(pfam)*pseudo)
     b = (value[1] + pseudo)/float(chr_count+len(pfam)*pseudo)
     c = (value[2] + pseudo)/float(vir_count+len(pfam)*pseudo)
