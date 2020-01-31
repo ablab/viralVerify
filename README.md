@@ -27,7 +27,7 @@ To work properly, viralVerify require Prodigal and hmmsearch in your PATH enviro
 
 You can verify your output by BLAST to check if you found novel viruses or plasmids. In this case, you need to have blastn in your $PATH, Biopython installed, and provide a path to the local copy of nt database. 
 
-## Usage 
+### Usage 
 
     ./viralverify.py 
             -f Input fasta file
@@ -41,9 +41,13 @@ You can verify your output by BLAST to check if you found novel viruses or plasm
             -p          Output predicted plasmidic contigs separately
 
 
-Output file: comma-separated table <input_file>_result_table.csv
+Output file: comma-separated table *<input_file>_result_table.csv*
 
 Output format: contig name, prediction result, log-likelihood ratio, list of predicted HMMs
   
-Fasta files with prediction results can be found in Prediction_results_fasta folder
+Fasta files with prediction results can be found in the *Prediction_results_fasta* folder
   
+
+### Retraining classifier
+
+You can retrain the classifier with your custom data using provided script *training_script.py*. It takes viral, chromosomal and plasmid (optionally) training sequences in fasta format and set of HMMS, predict genes and HMM hits, and returns the frequency table. To use the retrained classifier, replace the "classifier_table.txt" file in the viralVerify directory with the obtained table.

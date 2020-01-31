@@ -1,5 +1,6 @@
 # Training script for viralVerify
 # Input - fasta files with viral, chromosomal and plasmid (optionally) training sequences
+# To use the retrained classifier, replace the "classifier_table.txt" file in viralVerify directory with obtained table.
 
 import sys
 import argparse
@@ -151,4 +152,4 @@ with open(outdir+"/classifier_table.txt", 'w') as output:
 
 
 print ("Table for classifier can be found in " + os.path.abspath(outdir+"/classifier_table.txt"))
-
+print ('To use the retrained classifier, replace the "classifier_table.txt" file in the viralVerify directory with obtained table.')
