@@ -7,6 +7,8 @@ viralVerify predicts genes in the contig using Prodigal in the metagenomic mode,
 and classifies the contig as vrial or non-viral by applying the Naive Bayes classifier (NBC). 
 For the set of predicted HMMs, viralVerify uses trained NBC to classify this set to be viral or chromosomal. 
 
+To improve results in the case of metagenomes with possible host contamination, we recommend users to filter out reads that align to the host genome prior to assembly.
+Since viralVerify is based on gene classification, it can be used on contigs on any length, and short viruses can be detected as long as they contain a recognizable virus-specific gene. To help analyze the rapidly growing amount of novel data, we have added a script that allows users to construct their own training database from a set of viral, chromosomal and plasmid contigs, as well as custom HMM database
 ### Requirements
 
 viralVerify is a Python script, thus, installation is not required. However, it has the following dependencies:
