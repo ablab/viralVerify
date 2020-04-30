@@ -304,11 +304,12 @@ def main():
         nos_list = [i.strip().split()[0] for i in nos_list]
     
     
-        amb= [line.rstrip() for line in open(name + "_ambiguous.names")]
-        amb_list=[]
-        for i in amb:
-            amb_list.append(i)
-        amb_list = [i.strip().split()[0] for i in amb_list] 
+        other= [line.rstrip() for line in open(name + "_other.names")]
+        other_list=[]
+        for i in other:
+          if len(i.split())>0:
+            other_list.append(i.split()[0])
+        other_list = [i.strip().split()[0] for i in other_list] 
 
     
     final_table=collections.OrderedDict()
@@ -320,15 +321,15 @@ def main():
                 names_result[i][0] = "Uncertain - viral or bacterial"
 
             if i in plasmids_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Plasmid", plasmids_list[i][0], plasmids_list[i][1],plasmids_list[i][2]]
+              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Plasmid", round(plasmids_list[i][0],2), round(plasmids_list[i][1],2),plasmids_list[i][2]]
             if i in chrom_list:
               final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Chromosome", chrom_list[i][0], chrom_list[i][1],chrom_list[i][2]]
             if i in vir_list:
               final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Virus", vir_list[i][0], vir_list[i][1],vir_list[i][2]]
             if i in nos_list:
               final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Non-significant"]
-            if i in amb_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Ambiguous"]
+            if i in other_list:
+              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Other", ]
     
        else: 
             if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):
@@ -345,8 +346,8 @@ def main():
               final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1],"--", "--", "Virus", vir_list[i][0], vir_list[i][1],vir_list[i][2]]
             if i in nos_list:
               final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "--", "--", "Non-significant"]
-            if i in amb_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "--", "--", "Ambiguous"]
+            if i in other_list:
+              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "--", "--", "Other", other_list[i][0], other_list[i][1],other_list[i][2]]
 
 
 

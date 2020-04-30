@@ -4,7 +4,7 @@ import argparse
 from glob import glob
 #from joblib import Parallel, delayed
 import os.path
-import pickle
+
 
 
 #hsps with larger e-value are discarded
@@ -78,7 +78,7 @@ def parse_name(seq):
     elif (seq.find('hromosome') != -1 or seq.find("omplete genome") != -1):
         return "Chromosome"
     else:
-        return "Unknown"
+        return "Other"
 
 def report_file(file, query, alignment):
     file.write(query + '\n')
@@ -100,14 +100,11 @@ def parser(f, out_dir):
     nosig = open(name[:-4]+"_no_significant.names", "w")
     chrom = open(name[:-4]+"_chromosome.names", "w")
     plasmids = open(name[:-4]+"_plasmid.names", "w")
-    amb_file = open(name[:-4]+"_ambiguous.names", "w")
+    other = open(name[:-4]+"_other.names", "w")
     records= NCBIXML.parse(xml_file)
     viral = open(name[:-4]+"_viruses.names", "w")
-    files = {"Virus": viral, "Plasmid": plasmids, "Chromosome": chrom}
+    files = {"Virus": viral, "Plasmid": plasmids, "Chromosome": chrom, "Other": other}
     for item in records:
-    #    print (item.query)
-	### We are taking query length from contig name provided by SPAdes. Weird, huh?
-#        pl_len = (int) ((item.query).split('_')[3])
         pl_len = item.query_length
 	###### No alignment - put in non-significant
         if len(item.alignments) == 0:
@@ -115,20 +112,16 @@ def parser(f, out_dir):
             nosig.write(item.query + '\n\n')
             continue
 
-
-	###### E > 0.001 
         good_aln = []
         scat_good_aln = []
-        #print item.alignments
         alignments = []
         for alignment in item.alignments:
-            seq_type = parse_name(alignment.title)
+            seq_type = parse_name(alignment.title) # Virus, Plasmid, Chromosome or Other
             query_coverage = get_query_coverage(alignment)
-            if seq_type == "Unknown" or get_query_coverage(alignment) < significant_query_fraction * pl_len:
+            if get_query_coverage(alignment) < significant_query_fraction * pl_len:
                 continue
             alignments.append([get_query_coverage(alignment), alignment.title, parse_name(alignment.title), get_total_len(alignment), get_identity(alignment), get_hsp_count(alignment), pl_len])
         if len(alignments)== 0:
-           # print ("No Significant")
             nosig.write(item.query + '\n')
             al = item.alignments[0]
             nosig.write(al.title + "\t" + "total query cov " + str(get_query_coverage(al)) + " of " + str(pl_len))
@@ -138,17 +131,14 @@ def parser(f, out_dir):
             alignments.reverse()
             type = alignments[0][2]
             best_query_cov = alignments[0][0]
-            ambigous = 0
+            #ambigous = 0
             for i in range (1, len(alignments)):
                 if alignments[i][0] < best_query_cov * significant_ratio:
                     break
                 if type !=  alignments[i][2]:
-                    ambigous = i
-                    break
-            if ambigous != 0:
-               # print ("Ambiguous")
-                amb_file.write(item.query + '\n')
-                amb_file.write (alignments[0][1] + '\t' + str(best_query_cov) + '\t' + alignments[ambigous][1] + '\t' + str(alignments[ambigous][0]) + '\n')
+                    if alignments[i][2] == "Virus" or alignments[i][2] == "Plasmid":
+                        report_file(files[alignments[i][2]], item.query,alignments[0])
+                        break                    
             else:
                # print (type)
                 report_file(files[type], item.query,alignments[0])
