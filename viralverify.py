@@ -339,15 +339,15 @@ def main():
 
               
             if i in plasmids_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "--", "--", "Plasmid", plasmids_list[i][0], plasmids_list[i][1],plasmids_list[i][2]]
+              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Plasmid", plasmids_list[i][0], plasmids_list[i][1],plasmids_list[i][2]]
             if i in chrom_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "--", "--", "Chromosome", chrom_list[i][0], chrom_list[i][1],chrom_list[i][2]]
+              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Chromosome", chrom_list[i][0], chrom_list[i][1],chrom_list[i][2]]
             if i in vir_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1],"--", "--", "Virus", vir_list[i][0], vir_list[i][1],vir_list[i][2]]
+              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1],"-", "-", "Virus", vir_list[i][0], vir_list[i][1],vir_list[i][2]]
             if i in nos_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "--", "--", "Non-significant"]
+              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Non-significant"]
             if i in other_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "--", "--", "Other", other_list[i][0], other_list[i][1],other_list[i][2]]
+              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Other", other_list[i][0], other_list[i][1],other_list[i][2]]
 
 
 
@@ -360,9 +360,9 @@ def main():
         final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1],names_result[i][2]]
       else:
         if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):
-          final_table[i] = ["Uncertain - viral or bacterial", contig_len_circ[i][0], contig_len_circ[i][1], "--"]
+          final_table[i] = ["Uncertain - viral or bacterial", contig_len_circ[i][0], contig_len_circ[i][1], "-"]
         else:
-          final_table[i] = ["Uncertain - too short", contig_len_circ[i][0], contig_len_circ[i][1], "--"]
+          final_table[i] = ["Uncertain - too short", contig_len_circ[i][0], contig_len_circ[i][1], "-"]
     
     result_file = name + "_result_table.csv"
     with open(result_file, 'w') as output:
