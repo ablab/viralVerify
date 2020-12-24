@@ -23,6 +23,7 @@ def parse_args(args):
     optional_args = parser.add_argument_group('optional arguments')
     optional_args.add_argument('--db', help='Run BLAST on input contigs with provided database')
     optional_args.add_argument('-t', help='Number of threads')   
+    optional_args.add_argument('-thr', help='Detection threshold for classifier (default = 7)')   
     optional_args.add_argument('-p', action='store_true', help='Output predicted plasmids separately')   
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
@@ -95,12 +96,12 @@ def get_table_from_tblout(tblout_pfam):
     for i in top_genes:
         name = i.rsplit("_", 1)[0]
         if name not in contigs:
-            contigs[name] = []
+            contigs[name] = set()
             for i in top_genes[i]:
-                contigs[name].append(i[0])
+                contigs[name].add(i[0])
         else:
             for i in top_genes[i]:
-                contigs[name].append(i[0])
+                contigs[name].add(i[0])
 
     out = []
     for key, value in contigs.items():
@@ -110,7 +111,7 @@ def get_table_from_tblout(tblout_pfam):
 
 
 def naive_bayes(input_list):
-    unc_score = 3
+    unc_score = threshold
     tr=os.path.dirname(os.path.abspath(__file__)) + "/classifier_table.txt"
 
     with open(tr, 'r') as infile:
@@ -195,6 +196,11 @@ def main():
         threads = str(args.t)
     else:
         threads = str(20)
+
+    if args.thr:
+        threshold = int(args.thr)
+    else:
+        threshold = 7 
     
 
     # Check for circular:   
