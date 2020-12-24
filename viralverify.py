@@ -112,7 +112,7 @@ def get_table_from_tblout(tblout_pfam):
 
 def naive_bayes(input_list):
     unc_score = threshold
-    tr=os.path.dirname(os.path.abspath(__file__)) + "/classifier_table.txt"
+    tr=os.path.dirname(os.path.abspath(__file__)) + "/classifier_table_uniq.txt"
 
     with open(tr, 'r') as infile:
         table=infile.readlines()
