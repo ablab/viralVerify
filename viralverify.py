@@ -110,8 +110,7 @@ def get_table_from_tblout(tblout_pfam):
     return out
 
 
-def naive_bayes(input_list):
-    unc_score = threshold
+def naive_bayes(input_list, unc_score):
     tr=os.path.dirname(os.path.abspath(__file__)) + "/classifier_table_uniq.txt"
 
     with open(tr, 'r') as infile:
@@ -260,7 +259,7 @@ def main():
     
     print ("Classification...")
     t=feature_table_genes
-    k = naive_bayes(t)
+    k = naive_bayes(t, threshold)
 
     names_result={}
     for i in range (0,len(k)):
@@ -289,7 +288,7 @@ def main():
         #run blast
         print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
         print ("Running BLAST...")    
-        os.system ("blastn  -query " + args.f + " -db " + blastdb + " -evalue 0.0001 -outfmt "6 qseqid sseqid evalue qcovs pident stitle sscinames scomnames sblastnames" -out "+name+".blastn -num_threads "+threads+" -num_alignments 50")                
+        os.system ("blastn  -query " + args.f + " -db " + blastdb + " -evalue 0.0001 -outfmt \"6 qseqid evalue qcovs pident stitle \" -out "+name+".blastn -num_threads "+threads+" -num_alignments 1")                
         print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
         print ("Parsing BLAST")
         print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
@@ -299,14 +298,14 @@ def main():
         blast_results = {}
         for line in open (name+".blastn"):
             items = line.strip().split("\t")
-            blast_results[items[0]]=[items[2,3,4,1,5]]
+            blast_results[items[0]]=items[1:]
             
             
         for i in final_table:
             if i in blast_results:
                 final_table[i]+=blast_results[i]
             else:
-                final_table[i]+=["NA","NA","NA","NA","NA"]
+                final_table[i]+=["No BLAST hits"]
     
     
     result_file = name + "_result_table.csv"
