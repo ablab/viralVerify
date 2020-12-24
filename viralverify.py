@@ -268,107 +268,46 @@ def main():
 
     
 
-
-    if args.db:
-        #run blast
-        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
-        print ("Running BLAST...")
-    
-        os.system ("blastn  -query " + args.f + " -db " + blastdb + " -evalue 0.0001 -outfmt 5 -out "+name+".xml -num_threads "+threads+" -num_alignments 50")
-        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
-        print ("Parsing BLAST")
-        parser(name+".xml", outdir)
-        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
-
-    
-        #### add blast results
-        plasmids= [line.strip().split("\t") for line in open(name + "_plasmid.names")]
-    
-        plasmids_list={}
-        for i in range(0, len(plasmids)-1):
-          if len(plasmids[i])==1:
-            plasmids_list[plasmids[i][0].split()[0]] = [float(plasmids[i+1][1].split(":")[1]), float(plasmids[i+1][2].split(":")[1]), plasmids[i+1][0]]
-    
-        chrom= [line.rstrip().split("\t") for line in open(name + "_chromosome.names")]
-        chrom_list={}
-        for i in range(0, len(chrom)-1):
-          if len(chrom[i])==1:
-            chrom_list[chrom[i][0].split()[0]] = [float(chrom[i+1][1].split(":")[1]), float(chrom[i+1][2].split(":")[1]), chrom[i+1][0]]
-    
-    
-        vir= [line.rstrip().split("\t") for line in open(name + "_viruses.names")]
-        vir_list={}
-        for i in range(0, len(vir)-1):
-          if len(vir[i])==1:
-                vir_list[vir[i][0].split()[0]] = [float(vir[i+1][1].split(":")[1]), float(vir[i+1][2].split(":")[1]), vir[i+1][0]]
-    
-        nos= [line.rstrip() for line in open(name + "_no_significant.names")]
-        nos_list=[]
-        for i in nos:
-          if len(i.split())>0:
-            nos_list.append(i.split()[0])
-        nos_list = [i.strip().split()[0] for i in nos_list]
-    
-    
-        other= [line.rstrip() for line in open(name + "_other.names")]
-        other_list=[]
-        for i in other:
-          if len(i.split())>0:
-            other_list.append(i.split()[0])
-        other_list = [i.strip().split()[0] for i in other_list] 
-
-    
+                    
     final_table=collections.OrderedDict()
-    if args.db:
-     for i in ids:
-       if i in names_result:
-            if names_result[i][0] == "Uncertain - too short":
-              if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):
-                names_result[i][0] = "Uncertain - viral or bacterial"
 
-            if i in plasmids_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Plasmid", round(plasmids_list[i][0],2), round(plasmids_list[i][1],2),plasmids_list[i][2]]
-            if i in chrom_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Chromosome", chrom_list[i][0], chrom_list[i][1],chrom_list[i][2]]
-            if i in vir_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Virus", vir_list[i][0], vir_list[i][1],vir_list[i][2]]
-            if i in nos_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Non-significant"]
-            if i in other_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Other", ]
-    
-       else: 
-            if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):
-              names_result[i] = "Uncertain - viral or bacterial"
-            else:
-              names_result[i] = "Uncertain - too short"
-
-              
-            if i in plasmids_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Plasmid", plasmids_list[i][0], plasmids_list[i][1],plasmids_list[i][2]]
-            if i in chrom_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Chromosome", chrom_list[i][0], chrom_list[i][1],chrom_list[i][2]]
-            if i in vir_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1],"-", "-", "Virus", vir_list[i][0], vir_list[i][1],vir_list[i][2]]
-            if i in nos_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Non-significant"]
-            if i in other_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Other", other_list[i][0], other_list[i][1],other_list[i][2]]
-
-
-
-    else:
-     for i in ids: 
-      if i in names_result:
+    for i in ids: 
+      if i in names_result:  # if we have any HMM hit for the contig
         if names_result[i][0] == "Uncertain - too short":
           if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):
             names_result[i][0] = "Uncertain - viral or bacterial"
         final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1],names_result[i][2]]
-      else:
-        if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):
+      else:  # if there is no HMM hits for the contig
+        if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):  # circular or long (>3000) contigs without hits may be of some interest
           final_table[i] = ["Uncertain - viral or bacterial", contig_len_circ[i][0], contig_len_circ[i][1], "-"]
         else:
-          final_table[i] = ["Uncertain - too short", contig_len_circ[i][0], contig_len_circ[i][1], "-"]
+          final_table[i] = ["Uncertain - too short", contig_len_circ[i][0], contig_len_circ[i][1], "-"]  # just short (<=3000) contigs with no HMM hits
+
+
+
+    if args.db:
+        #run blast
+        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
+        print ("Running BLAST...")    
+        os.system ("blastn  -query " + args.f + " -db " + blastdb + " -evalue 0.0001 -outfmt "6 qseqid sseqid evalue qcovs pident stitle sscinames scomnames sblastnames" -out "+name+".blastn -num_threads "+threads+" -num_alignments 50")                
+        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
+        print ("Parsing BLAST")
+        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
+
+    
+        #### add blast results
+        blast_results = {}
+        for line in open (name+".blastn"):
+            items = line.strip().split("\t")
+            blast_results[items[0]]=[items[2,3,4,1,5]]
+            
+            
+        for i in final_table:
+            if i in blast_results:
+                final_table[i]+=blast_results[i]
+            else:
+                final_table[i]+=["NA","NA","NA","NA","NA"]
+    
     
     result_file = name + "_result_table.csv"
     with open(result_file, 'w') as output:
