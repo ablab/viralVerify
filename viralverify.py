@@ -58,9 +58,6 @@ def check_circular(file, name):
        if circular_contigs[contig[0].split(" ")[0][1:]][1] == "-":
           output.write(contig[1]+"\n")
        elif circular_contigs[contig[0].split(" ")[0][1:]][1] == "+":
-        #  if contig[0].split(" ")[0][1:] in circ_set:
-          #  output.write(contig[1]+contig[1][:5000]+"\n")
-         # else:
             output.write(contig[1]+contig[1][kval:5000]+"\n")
 
    return(circular_contigs)
@@ -311,6 +308,10 @@ def main():
     result_file = name + "_result_table.csv"
     with open(result_file, 'w') as output:
         writer = csv.writer(output, lineterminator='\n')
+        if args.db:
+            writer.writerow(["Contig name", "Prediction", "Length","Circular","Score","Pfam hits","E-value","Query coverage","Identity","Hit name"])
+        else:
+            writer.writerow(["Contig name", "Prediction", "Length","Circular","Score","Pfam hits"])            
         for i in final_table:
           writer.writerow([i] + final_table[i])
     
@@ -334,8 +335,9 @@ def main():
         contigs = fastaparser.read_fasta(args.f)
         for i in contigs:
             contig_name = i[0].split(" ")[0][1:]
-            outfile_dict[final_table[contig_name][0]].write(i[0]+"\n")
-            outfile_dict[final_table[contig_name][0]].write(i[1]+"\n")
+            if contig_name[0] in outfile_dict:
+                outfile_dict[final_table[contig_name][0]].write(i[0]+"\n")
+                outfile_dict[final_table[contig_name][0]].write(i[1]+"\n")
 
 
     print ("Done!")
