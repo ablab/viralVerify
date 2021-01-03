@@ -318,44 +318,24 @@ def main():
         os.mkdir(outdir + "/Prediction_results_fasta/")
 
 
-    with open (outdir + "/Prediction_results_fasta/" +  name_file + "_virus.fasta", "w") as vir_file:
-      with open (outdir + "/Prediction_results_fasta/" +  name_file + "_plasmid.fasta", "w") as plasmid_file:
-        with open (outdir + "/Prediction_results_fasta/" +  name_file + "_chromosome.fasta", "w") as chrom_file:
-          with open (outdir + "/Prediction_results_fasta/" +  name_file + "_virus_uncertain.fasta", "w") as vc_file:
-            with open (outdir + "/Prediction_results_fasta/" +  name_file + "_plasmid_uncertain.fasta", "w") as pc_file:
-                contigs = fastaparser.read_fasta(args.f)
-                for i in contigs:
-                  contig_name = i[0].split(" ")[0][1:]
-                  if final_table[contig_name][0] == "Virus":
-                    vir_file.write(i[0]+"\n")
-                    vir_file.write(i[1]+"\n")
-                  elif final_table[contig_name][0] == "Chromosome":
-                    chrom_file.write(i[0]+"\n")
-                    chrom_file.write(i[1]+"\n")                    
-                  elif final_table[contig_name][0] == "Plasmid":
-                    if args.p:
-                      plasmid_file.write(i[0]+"\n")
-                      plasmid_file.write(i[1]+"\n")
-                    else:
-                      chrom_file.write(i[0]+"\n")
-                      chrom_file.write(i[1]+"\n")    
+    res_path = outdir + "/Prediction_results_fasta/" +  name_file
+    print (res_path)
+    with open (f"{res_path}_virus.fasta", "w") as vir_file, \
+        open (f"{res_path}_plasmid.fasta", "w") as plasmid_file, \
+        open (f"{res_path}_chromosome.fasta", "w") as chrom_file, \
+        open (f"{res_path}_virus_uncertain.fasta", "w") as vc_file, \
+        open (f"{res_path}_plasmid_uncertain.fasta", "w") as pc_file:
 
-                  elif final_table[contig_name][0] == "Uncertain - viral or bacterial":
-                    vc_file.write(i[0]+"\n")
-                    vc_file.write(i[1]+"\n")   
+        if args.p:
+            outfile_dict = {"Virus": vir_file, "Plasmid": plasmid_file, "Chromosome": chrom_file, "Uncertain - viral or bacterial": vc_file, "Uncertain - plasmid or chromosomal": pc_file} 
+        else:
+            outfile_dict = {"Virus": vir_file, "Plasmid": chrom_file, "Chromosome": chrom_file, "Uncertain - viral or bacterial": vc_file, "Uncertain - plasmid or chromosomal": chrom_file} 
 
-                  elif final_table[contig_name][0] == "Uncertain - plasmid or chromosomal":
-                    if args.p:
-                      pc_file.write(i[0]+"\n")
-                      pc_file.write(i[1]+"\n")
-                    else:
-                      chrom_file.write(i[0]+"\n")
-                      chrom_file.write(i[1]+"\n")  
-
-                if not args.p:
-                    os.remove(outdir + "/Prediction_results_fasta/" +  name_file + "_plasmid.fasta")  
-                    os.remove(outdir + "/Prediction_results_fasta/" +  name_file + "_plasmid_uncertain.fasta")  
-
+        contigs = fastaparser.read_fasta(args.f)
+        for i in contigs:
+            contig_name = i[0].split(" ")[0][1:]
+            outfile_dict[final_table[contig_name][0]].write(i[0]+"\n")
+            outfile_dict[final_table[contig_name][0]].write(i[1]+"\n")
 
 
     print ("Done!")
