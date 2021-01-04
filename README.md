@@ -16,7 +16,7 @@ Since viralVerify is based on gene classification, it can be used on contigs on 
 
 viralVerify is a Python script, thus, installation is not required. However, it has the following dependencies:
 
-* Python 2.7+,
+* Python 3.6+,
 * Prodigal (https://github.com/hyattpd/Prodigal, available via conda),
 * hmmsearch (from the hmmer package, http://hmmer.org/download.html),
 * provided database of virus/chromosome-specific HMMs (https://figshare.com/s/f897d463b31a35ad7bf0)
@@ -30,7 +30,8 @@ To work properly, viralVerify require Prodigal and hmmsearch in your PATH enviro
 
 ### Optional BLAST verification
 
-You can verify your output by BLAST to check if you found novel viruses or plasmids. In this case, you need to have blastn in your $PATH, Biopython installed, and provide a path to the nucleotide database (e.g. local copy of the NCBI nt database). For the best blast hit in the provided database for each contig the e-value, query coverage, identity and the hit name will be reported. 
+You can verify your output by BLAST to check if you found novel viruses or plasmids. In this case, you need to have blastn in your $PATH, Biopython installed, and provide a path to the nucleotide database (e.g. local copy of the NCBI nt database). For each contig we report information (e-value, query coverage, identity and subject title) about its best blast hit in the provided database.
+
 
 ### Usage 
 
@@ -43,7 +44,7 @@ You can verify your output by BLAST to check if you found novel viruses or plasm
             -h, --help  Show the help message and exit
             --db DB     Run BLAST on input contigs against provided db
             -t          Number of threads
-            -thr THR   Detection threshold for classifier (default = 7)
+            -thr THR    Sensitivity threshold (minimal score to classify sequence as viral, default = 7)
             -p          Output predicted plasmidic contigs separately
 
 
