@@ -44,7 +44,7 @@ You can verify your output by BLAST to check if you found novel viruses or plasm
             -h, --help  Show the help message and exit
             --db DB     Run BLAST on input contigs against provided db
             -t          Number of threads
-            -thr THR    Sensitivity threshold (minimal score to classify sequence as viral, default = 7)
+            -thr THR    Sensitivity threshold (minimal absolute score to classify sequence, default = 7)
             -p          Output predicted plasmidic contigs separately
 
 
