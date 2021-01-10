@@ -19,11 +19,11 @@ def parse_args(args):
     required_args = parser.add_argument_group('required arguments')
     required_args.add_argument('-f', required = True, help='Input fasta file')
     required_args.add_argument('-o', required = True, help='Output directory')
-    required_args.add_argument('--hmm', help='Path to Pfam-A HMM database')    
+    required_args.add_argument('--hmm', help='Path to HMM database')    
     optional_args = parser.add_argument_group('optional arguments')
     optional_args.add_argument('--db', help='Run BLAST on input contigs with provided database')
     optional_args.add_argument('-t', help='Number of threads')   
-    optional_args.add_argument('-thr', help='Detection threshold for classifier (default = 7)')   
+    optional_args.add_argument('--thr', help='Sensitivity threshold (minimal absolute score to classify sequence, default = 7)')
     optional_args.add_argument('-p', action='store_true', help='Output predicted plasmids separately')   
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
