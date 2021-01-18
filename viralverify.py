@@ -335,7 +335,7 @@ def main():
         contigs = fastaparser.read_fasta(args.f)
         for i in contigs:
             contig_name = i[0].split(" ")[0][1:]
-            if contig_name[0] in outfile_dict:
+            if final_table[contig_name][0] in outfile_dict:
                 outfile_dict[final_table[contig_name][0]].write(i[0]+"\n")
                 outfile_dict[final_table[contig_name][0]].write(i[1]+"\n")
 
