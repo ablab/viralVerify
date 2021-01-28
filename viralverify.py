@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 import os, errno
 import sys
 import argparse
@@ -7,10 +7,8 @@ from math import log
 from math import exp
 import csv
 import operator
-import time
-import datetime
 import fastaparser
-
+import logging
 
 def parse_args(args):
 ###### Command Line Argument Parser
@@ -168,7 +166,13 @@ def main():
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
+
+    logging.basicConfig(filename=outdir + "/viralverify.log",level=logging.INFO, format='%(asctime)s %(message)s',datefmt="%Y-%m-%d %H:%M:%S")
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    logging.info(f"viralVeirfy started as: \n {' '.join(sys.argv)}")
     
+
+
     name = os.path.join(outdir, name_file)
     
     ids = []
@@ -180,7 +184,7 @@ def main():
     if args.hmm:
         hmm = args.hmm
     else:
-        print ("No HMM database provided") 
+        logging.info(f"No HMM database provided")
         exit(1)    
     
     
@@ -204,12 +208,11 @@ def main():
     infile_circ = name + "_input_with_circ.fasta"
 
     # Run gene prediction
-    print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
-
-    print ("Gene prediction...")
+    logging.info(f"Gene prediction...")
     res = os.system ("prodigal -p meta -c -i " + infile_circ + " -a "+name+"_proteins.fa -o "+name+"_genes.fa 2>"+name+"_prodigal.log" )
     if res != 0:
         print ("Prodigal run failed")
+        logging.info(f"Prodigal run failed")
         exit(1)    
 
     # Filter genes predicted over the end of the contig
@@ -225,16 +228,13 @@ def main():
 
    # HMM search
 
-    print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
-    print ("HMM domains prediction...")
+    logging.info(f"HMM domains prediction...")
     res = os.system ("hmmsearch  --noali --cut_nc  -o "+name+"_out_pfam --domtblout "+name+"_domtblout --cpu "+ threads + " " + hmm + " "+name+"_proteins_circ.fa")
     if res != 0:
         print ("hmmsearch run failed")
         exit(1)  
 
-    print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
-   
-    print ("Parsing...")
+    logging.info(f"Parsing...")
     tblout_pfam= name + "_domtblout" 
 
 
@@ -252,9 +252,8 @@ def main():
           feature_table_names.append(i[0])
           feature_table_genes.append(i[1])
     
-    print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))  
-    
-    print ("Classification...")
+    logging.info(f"Classification...")
+
     t=feature_table_genes
     k = naive_bayes(t, threshold)
 
@@ -282,13 +281,11 @@ def main():
 
 
     if args.db:
-        #run blast
-        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
-        print ("Running BLAST...")    
-        os.system ("blastn  -query " + args.f + " -db " + blastdb + " -evalue 0.0001 -outfmt \"6 qseqid evalue qcovs pident stitle \" -out "+name+".blastn -num_threads "+threads+" -num_alignments 1")                
-        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
-        print ("Parsing BLAST")
-        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
+        #run blast  
+        logging.info(f"Running BLAST...")
+        os.system ("blastn  -query " + args.f + " -db " + blastdb + " -evalue 0.0001 -outfmt \"6 qseqid evalue qcovs pident stitle \" -out "+name+".blastn -num_threads "+threads+" -num_alignments 1")
+        logging.info(f"Parsing BLAST...")
+
 
     
         #### add blast results
@@ -320,7 +317,6 @@ def main():
 
 
     res_path = outdir + "/Prediction_results_fasta/" +  name_file
-    print (res_path)
     with open (f"{res_path}_virus.fasta", "w") as vir_file, \
         open (f"{res_path}_plasmid.fasta", "w") as plasmid_file, \
         open (f"{res_path}_chromosome.fasta", "w") as chrom_file, \
@@ -331,6 +327,8 @@ def main():
             outfile_dict = {"Virus": vir_file, "Plasmid": plasmid_file, "Chromosome": chrom_file, "Uncertain - viral or bacterial": vc_file, "Uncertain - plasmid or chromosomal": pc_file} 
         else:
             outfile_dict = {"Virus": vir_file, "Plasmid": chrom_file, "Chromosome": chrom_file, "Uncertain - viral or bacterial": vc_file, "Uncertain - plasmid or chromosomal": chrom_file} 
+            os.remove(str(f"{res_path}_plasmid.fasta"))
+            os.remove(f"{res_path}_plasmid_uncertain.fasta")
 
         contigs = fastaparser.read_fasta(args.f)
         for i in contigs:
@@ -339,10 +337,9 @@ def main():
                 outfile_dict[final_table[contig_name][0]].write(i[0]+"\n")
                 outfile_dict[final_table[contig_name][0]].write(i[1]+"\n")
 
+    logging.info(f"Done!")
+    logging.info(f"Verification results can be found in {os.path.abspath(result_file)}")
 
-    print ("Done!")
-    print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))  
-    print ("Verification results can be found in " + os.path.abspath(result_file))
     
     
 
