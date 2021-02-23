@@ -169,7 +169,7 @@ def main():
 
     logging.basicConfig(filename=outdir + "/viralverify.log",level=logging.INFO, format='%(asctime)s %(message)s',datefmt="%Y-%m-%d %H:%M:%S")
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-    logging.info(f"viralVeirfy started as: \n {' '.join(sys.argv)}")
+    logging.info(f"viralVerify started as: \n {' '.join(sys.argv)}")
     
 
 
