@@ -1,5 +1,7 @@
 # viralVerify: viral contig verification tool
 
+**Version: 1.1**
+
 viralVerify classifies contigs (output of metaviralSPAdes or other assemblers) as viral, non-viral or uncertain, 
 based on gene content. Also for non-viral contigs it can optionally provide plasmid/non-plasmid classification.
 
@@ -9,11 +11,12 @@ For the set of predicted HMMs, viralVerify uses trained NBC to classify this set
 
 To improve results in the case of metagenomes with possible host contamination, we recommend users to filter out reads that align to the host genome prior to assembly.
 Since viralVerify is based on gene classification, it can be used on contigs on any length, and short viruses can be detected as long as they contain a recognizable virus-specific gene. To help analyze the rapidly growing amount of novel data, we have added a script that allows users to construct their own training database from a set of viral, chromosomal and plasmid contigs, as well as custom HMM database
+
 ### Requirements
 
 viralVerify is a Python script, thus, installation is not required. However, it has the following dependencies:
 
-* Python 2.7+,
+* Python 3.6+,
 * Prodigal (https://github.com/hyattpd/Prodigal, available via conda),
 * hmmsearch (from the hmmer package, http://hmmer.org/download.html),
 * provided database of virus/chromosome-specific HMMs (https://figshare.com/s/f897d463b31a35ad7bf0)
@@ -27,7 +30,8 @@ To work properly, viralVerify require Prodigal and hmmsearch in your PATH enviro
 
 ### Optional BLAST verification
 
-You can verify your output by BLAST to check if you found novel viruses or plasmids. In this case, you need to have blastn in your $PATH, Biopython installed, and provide a path to the local copy of nt database. 
+You can verify your output by BLAST to check if you found novel viruses or plasmids. In this case, you need to have blastn in your $PATH, Biopython installed, and provide a path to the nucleotide database (e.g. local copy of the NCBI nt database). For each contig we report information (e-value, query coverage, identity and subject title) about its best blast hit in the provided database.
+
 
 ### Usage 
 
@@ -40,6 +44,7 @@ You can verify your output by BLAST to check if you found novel viruses or plasm
             -h, --help  Show the help message and exit
             --db DB     Run BLAST on input contigs against provided db
             -t          Number of threads
+            -thr THR    Sensitivity threshold (minimal absolute score to classify sequence, default = 7)
             -p          Output predicted plasmidic contigs separately
 
 
@@ -49,6 +54,7 @@ Output format: contig name, prediction result, log-likelihood ratio, list of pre
   
 Fasta files with prediction results can be found in the *Prediction_results_fasta* folder
   
+To decrease number of false positives (at the expense of potential false negatives) you may increase the detection threshold, provided as an optional argument.
 
 ### Retraining classifier
 

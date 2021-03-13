@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 import os, errno
 import sys
 import argparse
@@ -7,10 +7,8 @@ from math import log
 from math import exp
 import csv
 import operator
-import time
-import datetime
 import fastaparser
-
+import logging
 
 def parse_args(args):
 ###### Command Line Argument Parser
@@ -19,10 +17,11 @@ def parse_args(args):
     required_args = parser.add_argument_group('required arguments')
     required_args.add_argument('-f', required = True, help='Input fasta file')
     required_args.add_argument('-o', required = True, help='Output directory')
-    required_args.add_argument('--hmm', help='Path to Pfam-A HMM database')    
+    required_args.add_argument('--hmm', help='Path to HMM database')    
     optional_args = parser.add_argument_group('optional arguments')
     optional_args.add_argument('--db', help='Run BLAST on input contigs with provided database')
     optional_args.add_argument('-t', help='Number of threads')   
+    optional_args.add_argument('--thr', help='Sensitivity threshold (minimal absolute score to classify sequence, default = 7)')
     optional_args.add_argument('-p', action='store_true', help='Output predicted plasmids separately')   
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
@@ -57,9 +56,6 @@ def check_circular(file, name):
        if circular_contigs[contig[0].split(" ")[0][1:]][1] == "-":
           output.write(contig[1]+"\n")
        elif circular_contigs[contig[0].split(" ")[0][1:]][1] == "+":
-        #  if contig[0].split(" ")[0][1:] in circ_set:
-          #  output.write(contig[1]+contig[1][:5000]+"\n")
-         # else:
             output.write(contig[1]+contig[1][kval:5000]+"\n")
 
    return(circular_contigs)
@@ -95,12 +91,12 @@ def get_table_from_tblout(tblout_pfam):
     for i in top_genes:
         name = i.rsplit("_", 1)[0]
         if name not in contigs:
-            contigs[name] = []
+            contigs[name] = set()
             for i in top_genes[i]:
-                contigs[name].append(i[0])
+                contigs[name].add(i[0])
         else:
             for i in top_genes[i]:
-                contigs[name].append(i[0])
+                contigs[name].add(i[0])
 
     out = []
     for key, value in contigs.items():
@@ -109,9 +105,8 @@ def get_table_from_tblout(tblout_pfam):
     return out
 
 
-def naive_bayes(input_list):
-    unc_score = 3
-    tr=os.path.dirname(os.path.abspath(__file__)) + "/classifier_table.txt"
+def naive_bayes(input_list, unc_score):
+    tr=os.path.dirname(os.path.abspath(__file__)) + "/classifier_table_uniq.txt"
 
     with open(tr, 'r') as infile:
         table=infile.readlines()
@@ -171,7 +166,13 @@ def main():
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
+
+    logging.basicConfig(filename=outdir + "/viralverify.log",level=logging.INFO, format='%(asctime)s %(message)s',datefmt="%Y-%m-%d %H:%M:%S")
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    logging.info(f"viralVerify started as: \n {' '.join(sys.argv)}")
     
+
+
     name = os.path.join(outdir, name_file)
     
     ids = []
@@ -183,7 +184,7 @@ def main():
     if args.hmm:
         hmm = args.hmm
     else:
-        print ("No HMM database provided") 
+        logging.info(f"No HMM database provided")
         exit(1)    
     
     
@@ -195,6 +196,11 @@ def main():
         threads = str(args.t)
     else:
         threads = str(20)
+
+    if args.thr:
+        threshold = int(args.thr)
+    else:
+        threshold = 7 
     
 
     # Check for circular:   
@@ -202,12 +208,11 @@ def main():
     infile_circ = name + "_input_with_circ.fasta"
 
     # Run gene prediction
-    print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
-
-    print ("Gene prediction...")
+    logging.info(f"Gene prediction...")
     res = os.system ("prodigal -p meta -c -i " + infile_circ + " -a "+name+"_proteins.fa -o "+name+"_genes.fa 2>"+name+"_prodigal.log" )
     if res != 0:
         print ("Prodigal run failed")
+        logging.info(f"Prodigal run failed")
         exit(1)    
 
     # Filter genes predicted over the end of the contig
@@ -223,16 +228,13 @@ def main():
 
    # HMM search
 
-    print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
-    print ("HMM domains prediction...")
+    logging.info(f"HMM domains prediction...")
     res = os.system ("hmmsearch  --noali --cut_nc  -o "+name+"_out_pfam --domtblout "+name+"_domtblout --cpu "+ threads + " " + hmm + " "+name+"_proteins_circ.fa")
     if res != 0:
         print ("hmmsearch run failed")
         exit(1)  
 
-    print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
-   
-    print ("Parsing...")
+    logging.info(f"Parsing...")
     tblout_pfam= name + "_domtblout" 
 
 
@@ -250,11 +252,10 @@ def main():
           feature_table_names.append(i[0])
           feature_table_genes.append(i[1])
     
-    print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))  
-    
-    print ("Classification...")
+    logging.info(f"Classification...")
+
     t=feature_table_genes
-    k = naive_bayes(t)
+    k = naive_bayes(t, threshold)
 
     names_result={}
     for i in range (0,len(k)):
@@ -262,111 +263,52 @@ def main():
 
     
 
-
-    if args.db:
-        #run blast
-        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
-        print ("Running BLAST...")
-    
-        os.system ("blastn  -query " + args.f + " -db " + blastdb + " -evalue 0.0001 -outfmt 5 -out "+name+".xml -num_threads "+threads+" -num_alignments 50")
-        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')) 
-        print ("Parsing BLAST")
-        parser(name+".xml", outdir)
-        print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
-
-    
-        #### add blast results
-        plasmids= [line.strip().split("\t") for line in open(name + "_plasmid.names")]
-    
-        plasmids_list={}
-        for i in range(0, len(plasmids)-1):
-          if len(plasmids[i])==1:
-            plasmids_list[plasmids[i][0].split()[0]] = [float(plasmids[i+1][1].split(":")[1]), float(plasmids[i+1][2].split(":")[1]), plasmids[i+1][0]]
-    
-        chrom= [line.rstrip().split("\t") for line in open(name + "_chromosome.names")]
-        chrom_list={}
-        for i in range(0, len(chrom)-1):
-          if len(chrom[i])==1:
-            chrom_list[chrom[i][0].split()[0]] = [float(chrom[i+1][1].split(":")[1]), float(chrom[i+1][2].split(":")[1]), chrom[i+1][0]]
-    
-    
-        vir= [line.rstrip().split("\t") for line in open(name + "_viruses.names")]
-        vir_list={}
-        for i in range(0, len(vir)-1):
-          if len(vir[i])==1:
-                vir_list[vir[i][0].split()[0]] = [float(vir[i+1][1].split(":")[1]), float(vir[i+1][2].split(":")[1]), vir[i+1][0]]
-    
-        nos= [line.rstrip() for line in open(name + "_no_significant.names")]
-        nos_list=[]
-        for i in nos:
-          if len(i.split())>0:
-            nos_list.append(i.split()[0])
-        nos_list = [i.strip().split()[0] for i in nos_list]
-    
-    
-        other= [line.rstrip() for line in open(name + "_other.names")]
-        other_list=[]
-        for i in other:
-          if len(i.split())>0:
-            other_list.append(i.split()[0])
-        other_list = [i.strip().split()[0] for i in other_list] 
-
-    
+                    
     final_table=collections.OrderedDict()
-    if args.db:
-     for i in ids:
-       if i in names_result:
-            if names_result[i][0] == "Uncertain - too short":
-              if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):
-                names_result[i][0] = "Uncertain - viral or bacterial"
 
-            if i in plasmids_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Plasmid", round(plasmids_list[i][0],2), round(plasmids_list[i][1],2),plasmids_list[i][2]]
-            if i in chrom_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Chromosome", chrom_list[i][0], chrom_list[i][1],chrom_list[i][2]]
-            if i in vir_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Virus", vir_list[i][0], vir_list[i][1],vir_list[i][2]]
-            if i in nos_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Non-significant"]
-            if i in other_list:
-              final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1], names_result[i][2], "Other", ]
-    
-       else: 
-            if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):
-              names_result[i] = "Uncertain - viral or bacterial"
-            else:
-              names_result[i] = "Uncertain - too short"
-
-              
-            if i in plasmids_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Plasmid", plasmids_list[i][0], plasmids_list[i][1],plasmids_list[i][2]]
-            if i in chrom_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Chromosome", chrom_list[i][0], chrom_list[i][1],chrom_list[i][2]]
-            if i in vir_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1],"-", "-", "Virus", vir_list[i][0], vir_list[i][1],vir_list[i][2]]
-            if i in nos_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Non-significant"]
-            if i in other_list:
-              final_table[i] = [names_result[i], contig_len_circ[i][0], contig_len_circ[i][1], "-", "-", "Other", other_list[i][0], other_list[i][1],other_list[i][2]]
-
-
-
-    else:
-     for i in ids: 
-      if i in names_result:
+    for i in ids: 
+      if i in names_result:  # if we have any HMM hit for the contig
         if names_result[i][0] == "Uncertain - too short":
           if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):
             names_result[i][0] = "Uncertain - viral or bacterial"
         final_table[i] = [names_result[i][0], contig_len_circ[i][0], contig_len_circ[i][1], names_result[i][1],names_result[i][2]]
-      else:
-        if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):
+      else:  # if there is no HMM hits for the contig
+        if (contig_len_circ[i][0] > 3000) or (contig_len_circ[i][1] == "+"):  # circular or long (>3000) contigs without hits may be of some interest
           final_table[i] = ["Uncertain - viral or bacterial", contig_len_circ[i][0], contig_len_circ[i][1], "-"]
         else:
-          final_table[i] = ["Uncertain - too short", contig_len_circ[i][0], contig_len_circ[i][1], "-"]
+          final_table[i] = ["Uncertain - too short", contig_len_circ[i][0], contig_len_circ[i][1], "-"]  # just short (<=3000) contigs with no HMM hits
+
+
+
+    if args.db:
+        #run blast  
+        logging.info(f"Running BLAST...")
+        os.system ("blastn  -query " + args.f + " -db " + blastdb + " -evalue 0.0001 -outfmt \"6 qseqid evalue qcovs pident stitle \" -out "+name+".blastn -num_threads "+threads+" -num_alignments 1")
+        logging.info(f"Parsing BLAST...")
+
+
+    
+        #### add blast results
+        blast_results = {}
+        for line in open (name+".blastn"):
+            items = line.strip().split("\t")
+            blast_results[items[0]]=items[1:]
+            
+            
+        for i in final_table:
+            if i in blast_results:
+                final_table[i]+=blast_results[i]
+            else:
+                final_table[i]+=["No BLAST hits"]
+    
     
     result_file = name + "_result_table.csv"
     with open(result_file, 'w') as output:
         writer = csv.writer(output, lineterminator='\n')
+        if args.db:
+            writer.writerow(["Contig name", "Prediction", "Length","Circular","Score","Pfam hits","E-value","Query coverage","Identity","Hit name"])
+        else:
+            writer.writerow(["Contig name", "Prediction", "Length","Circular","Score","Pfam hits"])            
         for i in final_table:
           writer.writerow([i] + final_table[i])
     
@@ -374,49 +316,30 @@ def main():
         os.mkdir(outdir + "/Prediction_results_fasta/")
 
 
-    with open (outdir + "/Prediction_results_fasta/" +  name_file + "_virus.fasta", "w") as vir_file:
-      with open (outdir + "/Prediction_results_fasta/" +  name_file + "_plasmid.fasta", "w") as plasmid_file:
-        with open (outdir + "/Prediction_results_fasta/" +  name_file + "_chromosome.fasta", "w") as chrom_file:
-          with open (outdir + "/Prediction_results_fasta/" +  name_file + "_virus_uncertain.fasta", "w") as vc_file:
-            with open (outdir + "/Prediction_results_fasta/" +  name_file + "_plasmid_uncertain.fasta", "w") as pc_file:
-                contigs = fastaparser.read_fasta(args.f)
-                for i in contigs:
-                  contig_name = i[0].split(" ")[0][1:]
-                  if final_table[contig_name][0] == "Virus":
-                    vir_file.write(i[0]+"\n")
-                    vir_file.write(i[1]+"\n")
-                  elif final_table[contig_name][0] == "Chromosome":
-                    chrom_file.write(i[0]+"\n")
-                    chrom_file.write(i[1]+"\n")                    
-                  elif final_table[contig_name][0] == "Plasmid":
-                    if args.p:
-                      plasmid_file.write(i[0]+"\n")
-                      plasmid_file.write(i[1]+"\n")
-                    else:
-                      chrom_file.write(i[0]+"\n")
-                      chrom_file.write(i[1]+"\n")    
+    res_path = outdir + "/Prediction_results_fasta/" +  name_file
+    with open (f"{res_path}_virus.fasta", "w") as vir_file, \
+        open (f"{res_path}_plasmid.fasta", "w") as plasmid_file, \
+        open (f"{res_path}_chromosome.fasta", "w") as chrom_file, \
+        open (f"{res_path}_virus_uncertain.fasta", "w") as vc_file, \
+        open (f"{res_path}_plasmid_uncertain.fasta", "w") as pc_file:
 
-                  elif final_table[contig_name][0] == "Uncertain - viral or bacterial":
-                    vc_file.write(i[0]+"\n")
-                    vc_file.write(i[1]+"\n")   
+        if args.p:
+            outfile_dict = {"Virus": vir_file, "Plasmid": plasmid_file, "Chromosome": chrom_file, "Uncertain - viral or bacterial": vc_file, "Uncertain - plasmid or chromosomal": pc_file} 
+        else:
+            outfile_dict = {"Virus": vir_file, "Plasmid": chrom_file, "Chromosome": chrom_file, "Uncertain - viral or bacterial": vc_file, "Uncertain - plasmid or chromosomal": chrom_file} 
+            os.remove(str(f"{res_path}_plasmid.fasta"))
+            os.remove(f"{res_path}_plasmid_uncertain.fasta")
 
-                  elif final_table[contig_name][0] == "Uncertain - plasmid or chromosomal":
-                    if args.p:
-                      pc_file.write(i[0]+"\n")
-                      pc_file.write(i[1]+"\n")
-                    else:
-                      chrom_file.write(i[0]+"\n")
-                      chrom_file.write(i[1]+"\n")  
+        contigs = fastaparser.read_fasta(args.f)
+        for i in contigs:
+            contig_name = i[0].split(" ")[0][1:]
+            if final_table[contig_name][0] in outfile_dict:
+                outfile_dict[final_table[contig_name][0]].write(i[0]+"\n")
+                outfile_dict[final_table[contig_name][0]].write(i[1]+"\n")
 
-                if not args.p:
-                    os.remove(outdir + "/Prediction_results_fasta/" +  name_file + "_plasmid.fasta")  
-                    os.remove(outdir + "/Prediction_results_fasta/" +  name_file + "_plasmid_uncertain.fasta")  
+    logging.info(f"Done!")
+    logging.info(f"Verification results can be found in {os.path.abspath(result_file)}")
 
-
-
-    print ("Done!")
-    print (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))  
-    print ("Verification results can be found in " + os.path.abspath(result_file))
     
     
 
