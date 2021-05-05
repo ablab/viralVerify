@@ -167,6 +167,18 @@ def main():
         if e.errno != errno.EEXIST:
             raise
 
+    if not os.path.exists(outdir + "/Prediction_results_fasta/"):
+        os.mkdir(outdir + "/Prediction_results_fasta/")
+    res_path = outdir + "/Prediction_results_fasta/" +  name_file
+    open (f"{res_path}_virus.fasta", "a").close() 
+    open (f"{res_path}_plasmid.fasta", "a").close() 
+    open (f"{res_path}_chromosome.fasta", "a").close() 
+    open (f"{res_path}_virus_uncertain.fasta", "a").close() 
+    open (f"{res_path}_plasmid_uncertain.fasta", "a").close() 
+
+
+
+
     logging.basicConfig(filename=outdir + "/viralverify.log",level=logging.INFO, format='%(asctime)s %(message)s',datefmt="%Y-%m-%d %H:%M:%S")
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     logging.info(f"viralVerify started as: \n {' '.join(sys.argv)}")
