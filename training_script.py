@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Training script for viralVerify
 # Input - fasta files with viral, chromosomal and plasmid (optionally) training sequences
 # To use the retrained classifier, replace the "classifier_table.txt" file in viralVerify directory with obtained table.
