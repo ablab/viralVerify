@@ -7,7 +7,12 @@
 import sys
 import argparse
 import os, errno
-from viralverify import check_circular
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'scripts'))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'db'))
+
+
+import check_circular
 
 def parse_args(args):
 ###### Command Line Argument Parser

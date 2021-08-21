@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
-import os, errno
+
 import sys
+import os, errno
+
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'scripts'))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'db'))
+
+print(sys.path)
+
 import argparse
 import collections
 from math import log
@@ -9,6 +17,7 @@ import csv
 import operator
 import fastaparser
 import logging
+from check_circular import check_circular
 
 def parse_args(args):
 ###### Command Line Argument Parser
@@ -31,34 +40,6 @@ def parse_args(args):
 
 
 
-def check_circular(file, name):
-   contigs = fastaparser.read_fasta(file)
-   count = []
-   circular_contigs = {}
-   input_fasta = name + "_input_with_circ.fasta"
-
-   with open(input_fasta, 'w') as output:
-
-    for contig in contigs:
-       circular_contigs[contig[0].split(" ")[0][1:]] = [len(contig[1]), "-"]
-       for kval in range (200,50, -1):
-           if kval >= len(contig[1]) or len(contig[1]) < 500:
-               continue
-           start = contig[1][:kval]
-           end = contig[1][-kval:]
-
-           if start == end: 
-               circular_contigs[contig[0].split(" ")[0][1:]] = [len(contig[1]), "+"]
-               break
-       
-
-       output.write(contig[0]+"\n")
-       if circular_contigs[contig[0].split(" ")[0][1:]][1] == "-":
-          output.write(contig[1]+"\n")
-       elif circular_contigs[contig[0].split(" ")[0][1:]][1] == "+":
-            output.write(contig[1]+contig[1][kval:5000]+"\n")
-
-   return(circular_contigs)
     
 
 
@@ -106,7 +87,7 @@ def get_table_from_tblout(tblout_pfam):
 
 
 def naive_bayes(input_list, unc_score):
-    tr=os.path.dirname(os.path.abspath(__file__)) + "/classifier_table_uniq.txt"
+    tr = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'db',"classifier_table_uniq.txt")
 
     with open(tr, 'r') as infile:
         table=infile.readlines()
