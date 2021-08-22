@@ -19,7 +19,7 @@ viralVerify is a Python script, thus, installation is not required. However, it 
 * Python 3.6+,
 * Prodigal (https://github.com/hyattpd/Prodigal, available via conda),
 * hmmsearch (from the hmmer package, http://hmmer.org/download.html),
-* provided database of virus/chromosome-specific HMMs (https://figshare.com/s/f897d463b31a35ad7bf0)
+* provided *decompressed* database of virus/chromosome-specific HMMs (https://figshare.com/s/f897d463b31a35ad7bf0)
 
  or 
  
@@ -35,7 +35,7 @@ You can verify your output by BLAST to check if you found novel viruses or plasm
 
 ### Usage 
 
-    ./viralverify.py 
+    viralverify 
             -f Input fasta file
             -o output_directory 
             --hmm HMM  Path to HMM database
@@ -58,4 +58,4 @@ To decrease number of false positives (at the expense of potential false negativ
 
 ### Retraining classifier
 
-You can retrain the classifier with your custom data using provided script *training_script.py*. It takes viral, chromosomal and plasmid (optionally) training sequences in fasta format and set of HMMS, predict genes and HMM hits, and returns the frequency table. To use the retrained classifier, replace the "classifier_table.txt" file in the viralVerify directory with the obtained table.
+You can retrain the classifier with your custom data using provided *training_script*. It takes viral, chromosomal and plasmid (optionally) training sequences in fasta format and set of HMMS, predict genes and HMM hits, and returns the frequency table. To use the retrained classifier, replace the "classifier_table.txt" file in the viralVerify directory with the obtained table.
